@@ -8,6 +8,7 @@ namespace SimpleCalculator
         private string? _pendingOperator;
         private bool _isNewInput = true;
         private Form2? _historyForm;
+        private Form3? _expandForm;
 
         private record CalculatorState(decimal CurrentResult, string? PendingOperator, bool IsNewInput, string InputText, string ResultText);
 
@@ -47,6 +48,7 @@ namespace SimpleCalculator
             btnSq.Click += BtnSq_Click;
             btnLoot.Click += BtnLoot_Click;
             btnHistory.Click += BtnHistory_Click;
+            btnExpand.Click += BtnExpand_Click;
         }
 
         private void NumberButton_Click(object? sender, EventArgs e)
@@ -90,19 +92,24 @@ namespace SimpleCalculator
                 return;
             }
 
+            ApplyOperator(inputValue, button.Text);
+        }
+
+        private void ApplyOperator(decimal inputValue, string operatorText)
+        {
             if (_pendingOperator is null)
             {
                 _currentResult = inputValue;
-                txtResult.Text = $"{FormatNumber(inputValue)} {NormalizeOperator(button.Text)} ";
+                txtResult.Text = $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
             }
             else
             {
                 SaveState();
                 _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(button.Text)} ";
+                txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
             }
 
-            _pendingOperator = button.Text;
+            _pendingOperator = operatorText;
             _isNewInput = true;
         }
 
@@ -187,6 +194,20 @@ namespace SimpleCalculator
             _historyForm.BringToFront();
         }
 
+        private void BtnExpand_Click(object? sender, EventArgs e)
+        {
+            if (_expandForm is null || _expandForm.IsDisposed)
+            {
+                _expandForm = new Form3(HandleExpandedOperator);
+                _expandForm.FormClosed += (_, _) => _expandForm = null;
+            }
+
+            _expandForm.StartPosition = FormStartPosition.Manual;
+            _expandForm.Location = new Point(Left, Bottom);
+            _expandForm.Show();
+            _expandForm.BringToFront();
+        }
+
         private void BtnPer_Click(object? sender, EventArgs e)
         {
             if (!TryGetInputValue(out var inputValue))
@@ -243,8 +264,58 @@ namespace SimpleCalculator
                 "－" or "-" => left - right,
                 "×" or "*" => left * right,
                 "÷" or "/" when right != 0 => left / right,
+                "mod" when right != 0 => left % right,
                 _ => left
             };
+        }
+
+        private void HandleExpandedOperator(string op)
+        {
+            if (!TryGetInputValue(out var inputValue))
+            {
+                return;
+            }
+
+            switch (op)
+            {
+                case "mod":
+                    ApplyOperator(inputValue, "mod");
+                    break;
+                case "π":
+                    txtInput.Text = FormatNumber((decimal)Math.PI);
+                    _isNewInput = false;
+                    break;
+                case "|x|":
+                    txtInput.Text = FormatNumber(Math.Abs(inputValue));
+                    _isNewInput = false;
+                    break;
+                case "log":
+                    if (inputValue <= 0)
+                    {
+                        return;
+                    }
+
+                    txtInput.Text = FormatNumber((decimal)Math.Log10((double)inputValue));
+                    _isNewInput = false;
+                    break;
+                case "ln":
+                    if (inputValue <= 0)
+                    {
+                        return;
+                    }
+
+                    txtInput.Text = FormatNumber((decimal)Math.Log((double)inputValue));
+                    _isNewInput = false;
+                    break;
+                case "exp":
+                    txtInput.Text = FormatNumber((decimal)Math.Exp((double)inputValue));
+                    _isNewInput = false;
+                    break;
+                case "(":
+                case ")":
+                    txtResult.Text = txtResult.Text == "0" ? op : $"{txtResult.Text}{op}";
+                    break;
+            }
         }
 
         private void LoadHistoryToCalculator(string expression)
@@ -309,6 +380,7 @@ namespace SimpleCalculator
                 "－" => "-",
                 "×" => "x",
                 "÷" => "/",
+                "mod" => "mod",
                 _ => op
             };
         }
@@ -332,6 +404,5 @@ namespace SimpleCalculator
             txtInput.Text = "0";
             txtResult.Text = "0";
         }
-
     }
 }

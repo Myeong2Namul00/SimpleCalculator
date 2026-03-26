@@ -56,6 +56,7 @@
             btnEqual = new Button();
             btnSign = new Button();
             btnHistory = new Button();
+            btnExpand = new Button();
             SuspendLayout();
             // 
             // txtResult
@@ -385,12 +386,25 @@
             btnHistory.Text = "history";
             btnHistory.UseVisualStyleBackColor = true;
             // 
+            // btnExpand
+            // 
+            btnExpand.BackColor = Color.WhiteSmoke;
+            btnExpand.FlatStyle = FlatStyle.Flat;
+            btnExpand.Font = new Font("맑은 고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnExpand.Location = new Point(84, 768);
+            btnExpand.Name = "btnExpand";
+            btnExpand.Size = new Size(487, 29);
+            btnExpand.TabIndex = 28;
+            btnExpand.Text = "▼";
+            btnExpand.UseVisualStyleBackColor = false;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(224, 224, 224);
             ClientSize = new Size(655, 809);
+            Controls.Add(btnExpand);
             Controls.Add(btnHistory);
             Controls.Add(btnDot);
             Controls.Add(btn0);
@@ -455,5 +469,6 @@
         private Button btnEqual;
         private Button btnSign;
         private Button btnHistory;
+        private Button btnExpand;
     }
 }
