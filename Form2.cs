@@ -14,6 +14,7 @@ namespace SimpleCalculator
         {
             _calculationHistory = calculationHistory;
             _loadHistoryAction = loadHistoryAction;
+            FormMoveSyncManager.Register(this);
 
             Text = "History";
             FormBorderStyle = FormBorderStyle.FixedDialog;

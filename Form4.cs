@@ -8,6 +8,7 @@
         {
             _onOperatorClick = onOperatorClick;
             InitializeComponent();
+            FormMoveSyncManager.Register(this);
             WireEvents();
         }
 

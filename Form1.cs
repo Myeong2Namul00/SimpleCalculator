@@ -16,6 +16,7 @@ namespace SimpleCalculator
         public Form1()
         {
             InitializeComponent();
+            FormMoveSyncManager.Register(this);
             WireEvents();
             ResetCalculator();
         }
@@ -132,20 +133,27 @@ namespace SimpleCalculator
 
         private void ApplyOperator(decimal inputValue, string operatorText)
         {
-            if (_pendingOperator is null)
+            try
             {
-                _currentResult = inputValue;
-                txtResult.Text = $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
-            }
-            else
-            {
-                SaveState();
-                _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
-            }
+                if (_pendingOperator is null)
+                {
+                    _currentResult = inputValue;
+                    txtResult.Text = $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
+                }
+                else
+                {
+                    SaveState();
+                    _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
+                    txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
+                }
 
-            _pendingOperator = operatorText;
-            _isNewInput = true;
+                _pendingOperator = operatorText;
+                _isNewInput = true;
+            }
+            catch (DivideByZeroException)
+            {
+                ShowInputError("0으로 나눌 수 없습니다!");
+            }
         }
 
         private void BtnEqual_Click(object? sender, EventArgs e)
@@ -181,12 +189,20 @@ namespace SimpleCalculator
             }
             else
             {
-                SaveState();
-                _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                var expression = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
-                txtResult.Text = expression;
-                _calculationHistory.Add(expression);
-                _historyForm?.RefreshHistory();
+                try
+                {
+                    SaveState();
+                    _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
+                    var expression = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
+                    txtResult.Text = expression;
+                    _calculationHistory.Add(expression);
+                    _historyForm?.RefreshHistory();
+                }
+                catch (DivideByZeroException)
+                {
+                    ShowInputError("0으로 나눌 수 없습니다!");
+                    return;
+                }
             }
 
             txtInput.Text = FormatNumber(_currentResult);
@@ -277,8 +293,14 @@ namespace SimpleCalculator
 
         private void BtnReci_Click(object? sender, EventArgs e)
         {
-            if (!TryGetInputValue(out var inputValue) || inputValue == 0)
+            if (!TryGetInputValue(out var inputValue))
             {
+                return;
+            }
+
+            if (inputValue == 0)
+            {
+                ShowInputError("0으로 나눌 수 없습니다!");
                 return;
             }
 
@@ -318,8 +340,10 @@ namespace SimpleCalculator
                 "＋" or "+" => left + right,
                 "－" or "-" => left - right,
                 "×" or "*" => left * right,
-                "÷" or "/" when right != 0 => left / right,
-                "mod" when right != 0 => left % right,
+                "÷" or "/" when right == 0 => throw new DivideByZeroException(),
+                "÷" or "/" => left / right,
+                "mod" when right == 0 => throw new DivideByZeroException(),
+                "mod" => left % right,
                 _ => left
             };
         }
@@ -402,6 +426,14 @@ namespace SimpleCalculator
                     _isNewInput = false;
                     break;
             }
+        }
+
+        private void ShowInputError(string message)
+        {
+            txtInput.Text = message;
+            _pendingOperator = null;
+            _isNewInput = true;
+            _isExpressionMode = false;
         }
 
         private static double ToRadians(decimal degree)
