@@ -2,12 +2,18 @@ namespace SimpleCalculator
 {
     public partial class Form1 : Form
     {
+        private const string DivideByZeroMessage = "0으로 나눌 수 없습니다!";
+        private static readonly System.Text.RegularExpressions.Regex ValidNumberRegex = new(@"^-?\d*(\.\d*)?$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        private static readonly System.Text.RegularExpressions.Regex ValidExpressionRegex = new(@"^[0-9+\-x*/().%mod\s]*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
         private readonly Stack<CalculatorState> _history = new();
         private readonly List<string> _calculationHistory = new();
         private decimal _currentResult;
         private string? _pendingOperator;
         private bool _isNewInput = true;
         private bool _isExpressionMode;
+        private bool _isInternalInputUpdate;
+        private string _lastValidInputText = "0";
         private Form2? _historyForm;
         private Form3? _expandForm;
 
@@ -25,6 +31,9 @@ namespace SimpleCalculator
         private void WireEvents()
         {
             KeyDown += Form1_KeyDown;
+            txtInput.KeyPress += TxtInput_KeyPress;
+            txtInput.TextChanged += TxtInput_TextChanged;
+            txtResult.ReadOnly = true;
 
             btn0.Click += NumberButton_Click;
             btn1.Click += NumberButton_Click;
@@ -54,6 +63,57 @@ namespace SimpleCalculator
             btnLoot.Click += BtnLoot_Click;
             btnHistory.Click += BtnHistory_Click;
             btnExpand.Click += BtnExpand_Click;
+        }
+
+        private void TxtInput_KeyPress(object? sender, KeyPressEventArgs e)
+        {
+            if (char.IsControl(e.KeyChar))
+            {
+                return;
+            }
+
+            var currentText = txtInput.Text;
+            var nextText = currentText.Remove(txtInput.SelectionStart, txtInput.SelectionLength)
+                .Insert(txtInput.SelectionStart, e.KeyChar.ToString());
+
+            if (!IsValidInputText(nextText))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TxtInput_TextChanged(object? sender, EventArgs e)
+        {
+            if (_isInternalInputUpdate)
+            {
+                return;
+            }
+
+            if (IsValidInputText(txtInput.Text))
+            {
+                _lastValidInputText = txtInput.Text;
+                return;
+            }
+
+            _isInternalInputUpdate = true;
+            txtInput.Text = _lastValidInputText;
+            txtInput.SelectionStart = txtInput.Text.Length;
+            _isInternalInputUpdate = false;
+        }
+
+        private bool IsValidInputText(string text)
+        {
+            if (text == DivideByZeroMessage)
+            {
+                return true;
+            }
+
+            if (_isExpressionMode)
+            {
+                return ValidExpressionRegex.IsMatch(text);
+            }
+
+            return string.IsNullOrEmpty(text) || ValidNumberRegex.IsMatch(text);
         }
 
         private void Form1_KeyDown(object? sender, KeyEventArgs e)
@@ -283,7 +343,7 @@ namespace SimpleCalculator
             }
             catch (DivideByZeroException)
             {
-                ShowInputError("0으로 나눌 수 없습니다!");
+                ShowInputError(DivideByZeroMessage);
             }
         }
 
@@ -331,7 +391,7 @@ namespace SimpleCalculator
                 }
                 catch (DivideByZeroException)
                 {
-                    ShowInputError("0으로 나눌 수 없습니다!");
+                    ShowInputError(DivideByZeroMessage);
                     return;
                 }
             }
@@ -420,7 +480,7 @@ namespace SimpleCalculator
 
             if (inputValue == 0)
             {
-                ShowInputError("0으로 나눌 수 없습니다!");
+                ShowInputError(DivideByZeroMessage);
                 return;
             }
 
@@ -547,6 +607,7 @@ namespace SimpleCalculator
         private void ShowInputError(string message)
         {
             txtInput.Text = message;
+            _lastValidInputText = message;
             _pendingOperator = null;
             _isNewInput = true;
             _isExpressionMode = false;
@@ -725,6 +786,7 @@ namespace SimpleCalculator
             _isNewInput = true;
             _isExpressionMode = false;
             txtInput.Text = "0";
+            _lastValidInputText = "0";
             txtResult.Text = "0";
         }
     }
