@@ -17,12 +17,15 @@ namespace SimpleCalculator
         {
             InitializeComponent();
             FormMoveSyncManager.Register(this);
+            KeyPreview = true;
             WireEvents();
             ResetCalculator();
         }
 
         private void WireEvents()
         {
+            KeyDown += Form1_KeyDown;
+
             btn0.Click += NumberButton_Click;
             btn1.Click += NumberButton_Click;
             btn2.Click += NumberButton_Click;
@@ -51,6 +54,134 @@ namespace SimpleCalculator
             btnLoot.Click += BtnLoot_Click;
             btnHistory.Click += BtnHistory_Click;
             btnExpand.Click += BtnExpand_Click;
+        }
+
+        private void Form1_KeyDown(object? sender, KeyEventArgs e)
+        {
+            var handled = true;
+
+            if (e.Shift && e.KeyCode == Keys.D9)
+            {
+                HandleExpandedOperator("(");
+            }
+            else if (e.Shift && e.KeyCode == Keys.D0)
+            {
+                HandleExpandedOperator(")");
+            }
+            else
+            {
+                switch (e.KeyCode)
+                {
+                    case Keys.D0:
+                    case Keys.NumPad0:
+                        btn0.PerformClick();
+                        break;
+                    case Keys.D1:
+                    case Keys.NumPad1:
+                        btn1.PerformClick();
+                        break;
+                    case Keys.D2:
+                    case Keys.NumPad2:
+                        btn2.PerformClick();
+                        break;
+                    case Keys.D3:
+                    case Keys.NumPad3:
+                        btn3.PerformClick();
+                        break;
+                    case Keys.D4:
+                    case Keys.NumPad4:
+                        btn4.PerformClick();
+                        break;
+                    case Keys.D5:
+                    case Keys.NumPad5:
+                        if (e.Shift)
+                        {
+                            btnPer.PerformClick();
+                        }
+                        else
+                        {
+                            btn5.PerformClick();
+                        }
+                        break;
+                    case Keys.D6:
+                    case Keys.NumPad6:
+                        btn6.PerformClick();
+                        break;
+                    case Keys.D7:
+                    case Keys.NumPad7:
+                        btn7.PerformClick();
+                        break;
+                    case Keys.D8:
+                    case Keys.NumPad8:
+                        if (e.Shift)
+                        {
+                            btnMul.PerformClick();
+                        }
+                        else
+                        {
+                            btn8.PerformClick();
+                        }
+                        break;
+                    case Keys.D9:
+                    case Keys.NumPad9:
+                        btn9.PerformClick();
+                        break;
+                    case Keys.Decimal:
+                    case Keys.OemPeriod:
+                        btnDot.PerformClick();
+                        break;
+                    case Keys.Add:
+                    case Keys.Oemplus:
+                        if (e.Shift)
+                        {
+                            btnAdd.PerformClick();
+                        }
+                        else
+                        {
+                            btnEqual.PerformClick();
+                        }
+                        break;
+                    case Keys.Subtract:
+                    case Keys.OemMinus:
+                        btnSub.PerformClick();
+                        break;
+                    case Keys.X:
+                    case Keys.Multiply:
+                        btnMul.PerformClick();
+                        break;
+                    case Keys.Divide:
+                    case Keys.Oem2:
+                        btnDiv.PerformClick();
+                        break;
+                    case Keys.M:
+                        HandleExpandedOperator("mod");
+                        break;
+                    case Keys.Back:
+                        btnBS.PerformClick();
+                        break;
+                    case Keys.Delete:
+                        btnCE.PerformClick();
+                        break;
+                    case Keys.C when !e.Control && !e.Alt:
+                        btnCE.PerformClick();
+                        break;
+                    case Keys.Escape:
+                        btnC.PerformClick();
+                        break;
+                    case Keys.Enter:
+                        btnEqual.PerformClick();
+                        break;
+                    default:
+                        handled = false;
+                        break;
+                }
+            }
+
+            if (handled)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
         }
 
         private void NumberButton_Click(object? sender, EventArgs e)
@@ -224,18 +355,7 @@ namespace SimpleCalculator
 
         private void BtnBS_Click(object? sender, EventArgs e)
         {
-            if (_isNewInput)
-            {
-                return;
-            }
-
-            if (txtInput.Text.Length <= 1 || (txtInput.Text.Length == 2 && txtInput.Text.StartsWith('-')))
-            {
-                txtInput.Text = "0";
-                return;
-            }
-
-            txtInput.Text = txtInput.Text[..^1];
+            ResetCalculator();
         }
 
         private void BtnCE_Click(object? sender, EventArgs e)
@@ -364,11 +484,7 @@ namespace SimpleCalculator
                 }
 
                 txtInput.Text += ")";
-
-                if (TryEvaluateExpression(txtInput.Text, out var groupedResult))
-                {
-                    txtResult.Text = $"{txtInput.Text} = {FormatNumber(groupedResult)}";
-                }
+                _isNewInput = false;
 
                 return;
             }
@@ -488,6 +604,8 @@ namespace SimpleCalculator
                 .Replace("mod", "%")
                 .Replace(" ", string.Empty);
 
+            normalized = NormalizeImplicitMultiplication(normalized);
+
             try
             {
                 var table = new System.Data.DataTable();
@@ -505,6 +623,21 @@ namespace SimpleCalculator
             {
                 return false;
             }
+        }
+
+        private static string NormalizeImplicitMultiplication(string expression)
+        {
+            var withParenMultiplier = System.Text.RegularExpressions.Regex.Replace(
+                expression,
+                @"(?<=[0-9\)])\(",
+                "*(");
+
+            var withRightParenMultiplier = System.Text.RegularExpressions.Regex.Replace(
+                withParenMultiplier,
+                @"\)(?=[0-9])",
+                ")*");
+
+            return withRightParenMultiplier;
         }
 
         private void LoadHistoryToCalculator(string expression)

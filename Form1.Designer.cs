@@ -379,7 +379,7 @@
             // 
             btnHistory.FlatStyle = FlatStyle.Flat;
             btnHistory.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
-            btnHistory.Location = new Point(565, 12);
+            btnHistory.Location = new Point(572, 7);
             btnHistory.Name = "btnHistory";
             btnHistory.Size = new Size(78, 40);
             btnHistory.TabIndex = 27;
