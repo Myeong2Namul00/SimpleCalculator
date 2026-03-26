@@ -7,6 +7,7 @@ namespace SimpleCalculator
         private decimal _currentResult;
         private string? _pendingOperator;
         private bool _isNewInput = true;
+        private bool _isExpressionMode;
         private Form2? _historyForm;
         private Form3? _expandForm;
 
@@ -58,6 +59,21 @@ namespace SimpleCalculator
                 return;
             }
 
+            if (_isExpressionMode)
+            {
+                if (txtInput.Text == "0")
+                {
+                    txtInput.Text = button.Text;
+                }
+                else
+                {
+                    txtInput.Text += button.Text;
+                }
+
+                _isNewInput = false;
+                return;
+            }
+
             if (_isNewInput || txtInput.Text == "0")
             {
                 txtInput.Text = button.Text;
@@ -72,6 +88,13 @@ namespace SimpleCalculator
 
         private void BtnDot_Click(object? sender, EventArgs e)
         {
+            if (_isExpressionMode)
+            {
+                txtInput.Text += ".";
+                _isNewInput = false;
+                return;
+            }
+
             if (_isNewInput)
             {
                 txtInput.Text = "0.";
@@ -87,7 +110,19 @@ namespace SimpleCalculator
 
         private void OperatorButton_Click(object? sender, EventArgs e)
         {
-            if (sender is not Button button || !TryGetInputValue(out var inputValue))
+            if (sender is not Button button)
+            {
+                return;
+            }
+
+            if (_isExpressionMode)
+            {
+                txtInput.Text += NormalizeOperator(button.Text);
+                _isNewInput = false;
+                return;
+            }
+
+            if (!TryGetInputValue(out var inputValue))
             {
                 return;
             }
@@ -115,6 +150,25 @@ namespace SimpleCalculator
 
         private void BtnEqual_Click(object? sender, EventArgs e)
         {
+            if (_isExpressionMode)
+            {
+                if (!TryEvaluateExpression(txtInput.Text, out var expressionResult))
+                {
+                    return;
+                }
+
+                var expression = $"{txtInput.Text} = {FormatNumber(expressionResult)}";
+                txtResult.Text = expression;
+                txtInput.Text = FormatNumber(expressionResult);
+                _calculationHistory.Add(expression);
+                _historyForm?.RefreshHistory();
+                _currentResult = expressionResult;
+                _pendingOperator = null;
+                _isNewInput = true;
+                _isExpressionMode = false;
+                return;
+            }
+
             if (!TryGetInputValue(out var inputValue))
             {
                 return;
@@ -172,6 +226,7 @@ namespace SimpleCalculator
         {
             txtInput.Text = "0";
             _isNewInput = true;
+            _isExpressionMode = false;
         }
 
         private void BtnC_Click(object? sender, EventArgs e)
@@ -271,6 +326,29 @@ namespace SimpleCalculator
 
         private void HandleExpandedOperator(string op)
         {
+            if (op == "(")
+            {
+                BeginOrAppendParenthesis();
+                return;
+            }
+
+            if (op == ")")
+            {
+                if (!_isExpressionMode)
+                {
+                    return;
+                }
+
+                txtInput.Text += ")";
+
+                if (TryEvaluateExpression(txtInput.Text, out var groupedResult))
+                {
+                    txtResult.Text = $"{txtInput.Text} = {FormatNumber(groupedResult)}";
+                }
+
+                return;
+            }
+
             if (!TryGetInputValue(out var inputValue))
             {
                 return;
@@ -311,10 +389,72 @@ namespace SimpleCalculator
                     txtInput.Text = FormatNumber((decimal)Math.Exp((double)inputValue));
                     _isNewInput = false;
                     break;
-                case "(":
-                case ")":
-                    txtResult.Text = txtResult.Text == "0" ? op : $"{txtResult.Text}{op}";
-                    break;
+            }
+        }
+
+        private void BeginOrAppendParenthesis()
+        {
+            if (_isExpressionMode)
+            {
+                txtInput.Text += "(";
+                _isNewInput = false;
+                return;
+            }
+
+            var expressionPrefix = BuildExpressionPrefix();
+            txtInput.Text = string.IsNullOrEmpty(expressionPrefix) ? "(" : $"{expressionPrefix}(";
+            _isExpressionMode = true;
+            _pendingOperator = null;
+            _isNewInput = false;
+        }
+
+        private string BuildExpressionPrefix()
+        {
+            if (_pendingOperator is not null)
+            {
+                return $"{FormatNumber(_currentResult)}{NormalizeOperator(_pendingOperator)}";
+            }
+
+            if (TryGetInputValue(out var inputValue) && inputValue != 0)
+            {
+                return FormatNumber(inputValue);
+            }
+
+            return string.Empty;
+        }
+
+        private static bool TryEvaluateExpression(string expression, out decimal result)
+        {
+            result = 0;
+
+            if (string.IsNullOrWhiteSpace(expression))
+            {
+                return false;
+            }
+
+            var normalized = expression
+                .Replace("x", "*")
+                .Replace("×", "*")
+                .Replace("÷", "/")
+                .Replace("mod", "%")
+                .Replace(" ", string.Empty);
+
+            try
+            {
+                var table = new System.Data.DataTable();
+                var computed = table.Compute(normalized, null);
+
+                if (computed is null)
+                {
+                    return false;
+                }
+
+                result = Convert.ToDecimal(computed);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -401,6 +541,7 @@ namespace SimpleCalculator
             _currentResult = 0;
             _pendingOperator = null;
             _isNewInput = true;
+            _isExpressionMode = false;
             txtInput.Text = "0";
             txtResult.Text = "0";
         }

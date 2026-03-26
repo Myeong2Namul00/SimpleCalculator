@@ -25,7 +25,7 @@ namespace SimpleCalculator
             lstHistory = new ListBox
             {
                 Name = "lstHistory",
-                Font = new Font("한컴 고딕", 22F, FontStyle.Bold, GraphicsUnit.Point),
+                Font = new Font("한컴 고딕", 16F, FontStyle.Bold, GraphicsUnit.Point),
                 HorizontalScrollbar = true,
                 IntegralHeight = false,
                 Location = new Point(12, 12),
