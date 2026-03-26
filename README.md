@@ -22,7 +22,7 @@
 
 ## 실행 화면 (과제1)
 
-
+<img src="img/screenshot-1.png" alt="과제1 실행화면1" width="25%" />
 
 - 과제 내용
 	- TextBox(입력표시, 결과표시), Button(계산) 등을 적절히 배치합니다.
@@ -39,7 +39,8 @@
 
 ## 실행 화면 (과제2)
 
-
+<img src="img/screenshot-2.png" alt="과제2 실행화면1" width="25%" />
+<img src="img/screenshot-3.png" alt="과제2 실행화면1" width="25%" />
 
 - 과제 내용
 	- 뺄셈(-), 곱셈(*), 나눗셈(/) 버튼 추가
@@ -55,7 +56,8 @@
 
 ## 실행 화면 (과제3)
 
-
+<img src="img/screenshot-4.png" alt="과제3 실행화면1" width="25%" />
+<img src="img/screenshot-5.png" alt="과제3 실행화면1" width="25%" />
 
 - 과제 내용
 	- 계산기에 있는 수정/삭제 기능 구현
@@ -75,7 +77,7 @@
 
 ## 실행 화면 (과제4)
 
-
+<img src="img/screenshot-6.png" alt="과제4 실행화면1" width="25%" />
 
 - 과제 내용
 	- Windows의 계산기를 참고하여
@@ -97,3 +99,4 @@
 	- 삼각비 계산 기능 구현
 	- 각각의 Form이 결합되어 하나의 애플리케이션으로 동작하도록 구현
 	- Form을 이동 시 전체가 함께 이동하도록 구현
+	- 키보드 입력으로 계산기 기능 작동 가능하도록 구현

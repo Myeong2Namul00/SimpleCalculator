@@ -276,6 +276,7 @@ namespace SimpleCalculator
             }
 
             _isNewInput = false;
+            UpdatePendingResultPreview();
         }
 
         private void BtnDot_Click(object? sender, EventArgs e)
@@ -297,7 +298,23 @@ namespace SimpleCalculator
             if (!txtInput.Text.Contains('.'))
             {
                 txtInput.Text += ".";
+                UpdatePendingResultPreview();
             }
+        }
+
+        private void UpdatePendingResultPreview()
+        {
+            if (_isExpressionMode || _pendingOperator is null)
+            {
+                return;
+            }
+
+            if (!TryGetInputValue(out var currentInput))
+            {
+                return;
+            }
+
+            txtResult.Text = $"{FormatNumber(_currentResult)} {NormalizeOperator(_pendingOperator)} {FormatNumber(currentInput)}";
         }
 
         private void OperatorButton_Click(object? sender, EventArgs e)
@@ -335,7 +352,7 @@ namespace SimpleCalculator
                 {
                     SaveState();
                     _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                    txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(operatorText)} ";
+                    txtResult.Text = $"{txtResult.Text} {NormalizeOperator(operatorText)} ";
                 }
 
                 _pendingOperator = operatorText;
@@ -382,9 +399,10 @@ namespace SimpleCalculator
             {
                 try
                 {
-                    SaveState();
+                    var left = _currentResult;
+                    SaveStateForEqualUndo(left);
                     _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                    var expression = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
+                    var expression = $"{FormatNumber(left)} {NormalizeOperator(_pendingOperator)} {FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
                     txtResult.Text = expression;
                     _calculationHistory.Add(expression);
                     _historyForm?.RefreshHistory();
@@ -415,14 +433,30 @@ namespace SimpleCalculator
 
         private void BtnBS_Click(object? sender, EventArgs e)
         {
-            ResetCalculator();
+            if (string.IsNullOrEmpty(txtInput.Text) || txtInput.Text == "0" || txtInput.Text == DivideByZeroMessage)
+            {
+                txtInput.Text = "0";
+                _isNewInput = true;
+                UpdatePendingResultPreview();
+                return;
+            }
+
+            if (txtInput.Text.Length == 1 || (txtInput.Text.Length == 2 && txtInput.Text.StartsWith('-')))
+            {
+                txtInput.Text = "0";
+                _isNewInput = true;
+                UpdatePendingResultPreview();
+                return;
+            }
+
+            txtInput.Text = txtInput.Text[..^1];
+            _isNewInput = false;
+            UpdatePendingResultPreview();
         }
 
         private void BtnCE_Click(object? sender, EventArgs e)
         {
-            txtInput.Text = "0";
-            _isNewInput = true;
-            _isExpressionMode = false;
+            UndoLastOperation();
         }
 
         private void BtnC_Click(object? sender, EventArgs e)
@@ -735,10 +769,26 @@ namespace SimpleCalculator
             _history.Push(new CalculatorState(_currentResult, _pendingOperator, _isNewInput, txtInput.Text, txtResult.Text));
         }
 
+        private void SaveStateForEqualUndo(decimal left)
+        {
+            var leftText = FormatNumber(left);
+            _history.Push(new CalculatorState(left, null, true, leftText, leftText));
+        }
+
         private void UndoLastOperation()
         {
             if (_history.Count == 0)
             {
+                if (_pendingOperator is not null)
+                {
+                    var current = FormatNumber(_currentResult);
+                    txtInput.Text = current;
+                    txtResult.Text = current;
+                    _pendingOperator = null;
+                    _isNewInput = true;
+                    _lastValidInputText = current;
+                }
+
                 return;
             }
 
@@ -748,6 +798,7 @@ namespace SimpleCalculator
             _isNewInput = previous.IsNewInput;
             txtInput.Text = previous.InputText;
             txtResult.Text = previous.ResultText;
+            _lastValidInputText = previous.InputText;
         }
 
         private string BuildExpression(decimal left, string op, decimal right, decimal result)
