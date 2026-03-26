@@ -389,7 +389,24 @@ namespace SimpleCalculator
                     txtInput.Text = FormatNumber((decimal)Math.Exp((double)inputValue));
                     _isNewInput = false;
                     break;
+                case "sin":
+                    txtInput.Text = FormatNumber((decimal)Math.Sin(ToRadians(inputValue)));
+                    _isNewInput = false;
+                    break;
+                case "cos":
+                    txtInput.Text = FormatNumber((decimal)Math.Cos(ToRadians(inputValue)));
+                    _isNewInput = false;
+                    break;
+                case "tan":
+                    txtInput.Text = FormatNumber((decimal)Math.Tan(ToRadians(inputValue)));
+                    _isNewInput = false;
+                    break;
             }
+        }
+
+        private static double ToRadians(decimal degree)
+        {
+            return (double)degree * Math.PI / 180d;
         }
 
         private void BeginOrAppendParenthesis()

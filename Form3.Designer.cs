@@ -36,6 +36,7 @@
             btnLn = new Button();
             btnMod = new Button();
             btnLog = new Button();
+            btnTrian = new Button();
             SuspendLayout();
             // 
             // btnAbs
@@ -134,12 +135,25 @@
             btnLog.Text = "log";
             btnLog.UseVisualStyleBackColor = false;
             // 
+            // btnTrian
+            // 
+            btnTrian.BackColor = Color.White;
+            btnTrian.FlatStyle = FlatStyle.Flat;
+            btnTrian.Font = new Font("나눔고딕", 12F, FontStyle.Regular, GraphicsUnit.Point, 129);
+            btnTrian.Location = new Point(599, 16);
+            btnTrian.Name = "btnTrian";
+            btnTrian.Size = new Size(34, 155);
+            btnTrian.TabIndex = 15;
+            btnTrian.Text = "▶";
+            btnTrian.UseVisualStyleBackColor = false;
+            // 
             // Form3
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(224, 224, 224);
             ClientSize = new Size(655, 193);
+            Controls.Add(btnTrian);
             Controls.Add(btnExp);
             Controls.Add(btnLn);
             Controls.Add(btnMod);
@@ -163,5 +177,6 @@
         private Button btnLn;
         private Button btnMod;
         private Button btnLog;
+        private Button btnTrian;
     }
 }
