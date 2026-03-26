@@ -90,15 +90,16 @@ namespace SimpleCalculator
             if (_pendingOperator is null)
             {
                 _currentResult = inputValue;
+                txtResult.Text = $"{FormatNumber(inputValue)} {NormalizeOperator(button.Text)} ";
             }
             else
             {
                 SaveState();
                 _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
+                txtResult.Text += $"{FormatNumber(inputValue)} {NormalizeOperator(button.Text)} ";
             }
 
             _pendingOperator = button.Text;
-            txtResult.Text = $"{FormatNumber(_currentResult)} {NormalizeOperator(_pendingOperator)} ";
             _isNewInput = true;
         }
 
@@ -117,9 +118,8 @@ namespace SimpleCalculator
             else
             {
                 SaveState();
-                var left = _currentResult;
                 _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                txtResult.Text = BuildExpression(left, _pendingOperator, inputValue, _currentResult);
+                txtResult.Text = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
             }
 
             txtInput.Text = FormatNumber(_currentResult);
@@ -157,12 +157,13 @@ namespace SimpleCalculator
 
         private void BtnCE_Click(object? sender, EventArgs e)
         {
-            ResetCalculator();
+            txtInput.Text = "0";
+            _isNewInput = true;
         }
 
         private void BtnC_Click(object? sender, EventArgs e)
         {
-            UndoLastOperation();
+            ResetCalculator();
         }
 
         private void BtnPer_Click(object? sender, EventArgs e)
