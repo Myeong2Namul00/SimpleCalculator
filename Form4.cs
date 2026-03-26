@@ -27,10 +27,5 @@
 
             _onOperatorClick(button.Text);
         }
-
-        private void btnCos_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

@@ -44,7 +44,6 @@
             btnTan.TabIndex = 18;
             btnTan.Text = "tan";
             btnTan.UseVisualStyleBackColor = false;
-            btnTan.Click += this.btnTan_Click;
             // 
             // btnSin
             // 
@@ -57,7 +56,6 @@
             btnSin.TabIndex = 16;
             btnSin.Text = "sin";
             btnSin.UseVisualStyleBackColor = false;
-            btnSin.Click += this.btnSin_Click;
             // 
             // btnCos
             // 
@@ -70,7 +68,6 @@
             btnCos.TabIndex = 15;
             btnCos.Text = "cos";
             btnCos.UseVisualStyleBackColor = false;
-            btnCos.Click += btnCos_Click;
             // 
             // Form4
             // 
