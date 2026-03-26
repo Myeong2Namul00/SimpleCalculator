@@ -55,6 +55,7 @@
             btn0 = new Button();
             btnEqual = new Button();
             btnSign = new Button();
+            btnHistory = new Button();
             SuspendLayout();
             // 
             // txtResult
@@ -373,12 +374,24 @@
             btnSign.Text = "+/-";
             btnSign.UseVisualStyleBackColor = false;
             // 
+            // btnHistory
+            // 
+            btnHistory.FlatStyle = FlatStyle.Flat;
+            btnHistory.Font = new Font("한컴 고딕", 12F, FontStyle.Bold, GraphicsUnit.Point, 129);
+            btnHistory.Location = new Point(565, 12);
+            btnHistory.Name = "btnHistory";
+            btnHistory.Size = new Size(78, 40);
+            btnHistory.TabIndex = 27;
+            btnHistory.Text = "history";
+            btnHistory.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(224, 224, 224);
             ClientSize = new Size(655, 809);
+            Controls.Add(btnHistory);
             Controls.Add(btnDot);
             Controls.Add(btn0);
             Controls.Add(btnEqual);
@@ -441,5 +454,6 @@
         private Button btn0;
         private Button btnEqual;
         private Button btnSign;
+        private Button btnHistory;
     }
 }

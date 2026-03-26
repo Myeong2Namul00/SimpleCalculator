@@ -3,9 +3,11 @@ namespace SimpleCalculator
     public partial class Form1 : Form
     {
         private readonly Stack<CalculatorState> _history = new();
+        private readonly List<string> _calculationHistory = new();
         private decimal _currentResult;
         private string? _pendingOperator;
         private bool _isNewInput = true;
+        private Form2? _historyForm;
 
         private record CalculatorState(decimal CurrentResult, string? PendingOperator, bool IsNewInput, string InputText, string ResultText);
 
@@ -44,6 +46,7 @@ namespace SimpleCalculator
             btnReci.Click += BtnReci_Click;
             btnSq.Click += BtnSq_Click;
             btnLoot.Click += BtnLoot_Click;
+            btnHistory.Click += BtnHistory_Click;
         }
 
         private void NumberButton_Click(object? sender, EventArgs e)
@@ -119,7 +122,10 @@ namespace SimpleCalculator
             {
                 SaveState();
                 _currentResult = ApplyBinaryOperation(_currentResult, inputValue, _pendingOperator);
-                txtResult.Text = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
+                var expression = $"{txtResult.Text}{FormatNumber(inputValue)} = {FormatNumber(_currentResult)}";
+                txtResult.Text = expression;
+                _calculationHistory.Add(expression);
+                _historyForm?.RefreshHistory();
             }
 
             txtInput.Text = FormatNumber(_currentResult);
@@ -164,6 +170,21 @@ namespace SimpleCalculator
         private void BtnC_Click(object? sender, EventArgs e)
         {
             ResetCalculator();
+        }
+
+        private void BtnHistory_Click(object? sender, EventArgs e)
+        {
+            if (_historyForm is null || _historyForm.IsDisposed)
+            {
+                _historyForm = new Form2(_calculationHistory, LoadHistoryToCalculator);
+                _historyForm.FormClosed += (_, _) => _historyForm = null;
+            }
+
+            _historyForm.StartPosition = FormStartPosition.Manual;
+            _historyForm.Location = new Point(Right, Top);
+            _historyForm.RefreshHistory();
+            _historyForm.Show();
+            _historyForm.BringToFront();
         }
 
         private void BtnPer_Click(object? sender, EventArgs e)
@@ -224,6 +245,35 @@ namespace SimpleCalculator
                 "÷" or "/" when right != 0 => left / right,
                 _ => left
             };
+        }
+
+        private void LoadHistoryToCalculator(string expression)
+        {
+            txtResult.Text = expression;
+
+            if (!TryExtractResultValue(expression, out var value))
+            {
+                return;
+            }
+
+            _currentResult = value;
+            _pendingOperator = null;
+            _isNewInput = true;
+            txtInput.Text = FormatNumber(value);
+        }
+
+        private static bool TryExtractResultValue(string expression, out decimal value)
+        {
+            value = 0;
+            var equalIndex = expression.LastIndexOf('=');
+
+            if (equalIndex < 0 || equalIndex >= expression.Length - 1)
+            {
+                return false;
+            }
+
+            var resultText = expression[(equalIndex + 1)..].Trim();
+            return decimal.TryParse(resultText, out value);
         }
 
         private void SaveState()
