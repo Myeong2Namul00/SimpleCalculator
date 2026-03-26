@@ -269,7 +269,7 @@ namespace SimpleCalculator
 
         private static string FormatNumber(decimal value)
         {
-            return value.ToString("0.############################");
+            return value.ToString("0.###########");
         }
 
         private void ResetCalculator()
